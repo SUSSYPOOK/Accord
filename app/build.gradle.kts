@@ -1,3 +1,7 @@
+@file:Suppress("UnstableApiUsage")
+
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -42,26 +46,31 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
+
+    lint {
+        checkReleaseBuilds = false
     }
 }
 
 dependencies {
 
-    implementation(project(":libphonograph:libPhonograph"))
+    implementation(project(":libPhonograph:libPhonograph"))
     implementation(project(":Cupertino:Cupertino"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.activity.ktx)
-    implementation(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.palette.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.palette.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.window)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.material)
 
 }
