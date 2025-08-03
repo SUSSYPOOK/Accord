@@ -55,10 +55,11 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
     private val activity
         get() = context as MainActivity
-    private val viewModel: AccordViewModel = ViewModelProvider(context as ViewModelStoreOwner)
-        .get(AccordViewModel::class.java)
+    private val viewModel: AccordViewModel =
+        ViewModelProvider(context as ViewModelStoreOwner)[AccordViewModel::class.java]
     private val windowHeight: Int
-        get() = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(context).bounds.height()
+        get() = WindowMetricsCalculator.getOrCreate()
+            .computeCurrentWindowMetrics(context).bounds.height()
     private var valueAnimator: ValueAnimator? = null
 
     private var gestureDetector = GestureDetector(context, this)
@@ -99,7 +100,9 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
     private var state: SlideStatus
         get() = viewModel.floatingPanelStatus.value
-        set(value) { viewModel.floatingPanelStatus.value = value }
+        set(value) {
+            viewModel.floatingPanelStatus.value = value
+        }
 
     private var onSlideListeners: MutableList<OnSlideListener> = mutableListOf()
 
@@ -264,7 +267,12 @@ class FloatingPanelLayout @JvmOverloads constructor(
     private var lastEventTime = 0L
     private var lastFlingSpeed = 0F
 
-    override fun onScroll(event1: MotionEvent?, event2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+    override fun onScroll(
+        event1: MotionEvent?,
+        event2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float
+    ): Boolean {
         val distanceMoved = -(scrollHeight + scrollBottomMargin - height - marginBottom)
         val timeDelta = (event2.eventTime - lastEventTime).toFloat()
         val lastVelocity = distanceMoved.absoluteValue / timeDelta
@@ -286,7 +294,12 @@ class FloatingPanelLayout @JvmOverloads constructor(
     override fun onLongPress(event: MotionEvent) {
     }
 
-    override fun onFling(event1: MotionEvent?, event2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+    override fun onFling(
+        event1: MotionEvent?,
+        event2: MotionEvent,
+        velocityX: Float,
+        velocityY: Float
+    ): Boolean {
         Log.d("TAG", "yesOnFling")
         valueAnimator?.cancel()
         valueAnimator = ValueAnimator.ofInt(
@@ -298,7 +311,10 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 val value = it.animatedValue as Int
                 setHeight(value)
             }
-            duration = min(max(((windowHeight - height) / lastFlingSpeed).toLong(), defaultMinDuration), defaultMaxDuration)
+            duration = min(
+                max(((windowHeight - height) / lastFlingSpeed).toLong(), defaultMinDuration),
+                defaultMaxDuration
+            )
             interpolator = defaultInterpolator
             start()
         }
@@ -308,12 +324,21 @@ class FloatingPanelLayout @JvmOverloads constructor(
     fun onUp(isUp: Boolean? = null, shouldAnimate: Boolean = true) {
         if (!shouldAnimate) {
             setHeight(
-                if ((isUp == null && height > retractThreshold * windowHeight) ||
-                    isUp == true)
+                height = if ((isUp == null && height > retractThreshold * windowHeight) ||
+                    isUp == true
+                )
                     windowHeight
                 else
                     initialHeight,
-                true
+                onRestart = true,
+                getProgress = {
+                    if ((isUp == null && height > retractThreshold * windowHeight) ||
+                        isUp == true
+                    )
+                        1f
+                    else
+                        0f
+                }
             )
             return
         }
@@ -321,7 +346,8 @@ class FloatingPanelLayout @JvmOverloads constructor(
         valueAnimator = ValueAnimator.ofInt(
             height,
             if ((isUp == null && height > retractThreshold * windowHeight) ||
-                isUp == true)
+                isUp == true
+            )
                 windowHeight
             else
                 initialHeight
@@ -348,9 +374,15 @@ class FloatingPanelLayout @JvmOverloads constructor(
             (initialMargin[3] * (1 - progress)).toInt()
         )
 
-    private fun setHeight(height: Int, onRestart: Boolean = false) {
+    private fun setHeight(
+        height: Int = 0,
+        onRestart: Boolean = false,
+        getProgress: (height: Int) -> Float = {
+            calculateProgressTillTop(it)
+        }
+    ) {
         Log.d(TAG, "setHeight: $height, onRestart: $onRestart")
-        progress = calculateProgressTillTop(height)
+        progress = getProgress(height)
         getMarginWithProgress(progress).let {
             val layoutParams = CoordinatorLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT,
@@ -374,15 +406,15 @@ class FloatingPanelLayout @JvmOverloads constructor(
         }
         val prevState = state
         BigDecimal(progress.toDouble()).setScale(3, RoundingMode.HALF_UP).toDouble().let {
-            when (it) {
+            state = when (it) {
                 1.0 -> {
-                    state = SlideStatus.EXPANDED
+                    SlideStatus.EXPANDED
                 }
                 0.0 -> {
-                    state = SlideStatus.COLLAPSED
+                    SlideStatus.COLLAPSED
                 }
                 else -> {
-                    state = SlideStatus.SLIDING
+                    SlideStatus.SLIDING
                 }
             }
         }
