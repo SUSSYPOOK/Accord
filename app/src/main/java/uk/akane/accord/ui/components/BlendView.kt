@@ -65,8 +65,8 @@ class BlendView @JvmOverloads constructor(
         const val FULL_BLUR_RADIUS: Float = 100F
         const val SHALLOW_BLUR_RADIUS: Float = 60F
         const val CYCLE: Int = 360
-        const val SATURATION_FACTOR: Float = 2F
-        const val BRIGHTNESS_FACTOR: Float = 10F
+        const val SATURATION_FACTOR: Float = 1.7F
+        const val BRIGHTNESS_FACTOR: Float = 0F
         const val PICTURE_SIZE: Int = 60
     }
 

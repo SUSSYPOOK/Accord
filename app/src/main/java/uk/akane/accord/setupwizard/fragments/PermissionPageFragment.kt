@@ -15,7 +15,7 @@ import uk.akane.accord.R
 import uk.akane.accord.logic.hasMediaPermissionSeparation
 import uk.akane.accord.logic.isAlbumPermissionGranted
 import uk.akane.accord.logic.isEssentialPermissionGranted
-import uk.akane.accord.logic.utils.AnimationUtils
+import uk.akane.cupertino.widget.AnimationUtils
 import uk.akane.accord.setupwizard.SetupWizardActivity
 
 class PermissionPageFragment : Fragment() {

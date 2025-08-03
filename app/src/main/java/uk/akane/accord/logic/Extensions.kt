@@ -30,7 +30,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import uk.akane.accord.R
-import uk.akane.accord.logic.utils.AnimationUtils
+import uk.akane.cupertino.widget.AnimationUtils
 import uk.akane.accord.logic.utils.CalculationUtils.lerp
 import uk.akane.accord.logic.utils.UiUtils
 import java.util.Locale

@@ -14,7 +14,7 @@ import uk.akane.accord.R
 import uk.akane.accord.logic.enableEdgeToEdgeProperly
 import uk.akane.accord.logic.isEssentialPermissionGranted
 import uk.akane.accord.logic.setCurrentItemInterpolated
-import uk.akane.accord.logic.utils.AnimationUtils
+import uk.akane.cupertino.widget.AnimationUtils
 import uk.akane.accord.setupwizard.adapters.SetupWizardViewPagerAdapter
 import uk.akane.accord.ui.MainActivity
 import uk.akane.accord.ui.viewmodels.AccordViewModel

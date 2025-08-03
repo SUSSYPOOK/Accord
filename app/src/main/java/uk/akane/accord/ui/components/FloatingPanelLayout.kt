@@ -287,6 +287,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
     }
 
     override fun onFling(event1: MotionEvent?, event2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        Log.d("TAG", "yesOnFling")
         valueAnimator?.cancel()
         valueAnimator = ValueAnimator.ofInt(
             height,
