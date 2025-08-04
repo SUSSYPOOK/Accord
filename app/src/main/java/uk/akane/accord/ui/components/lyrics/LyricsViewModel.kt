@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.view.doOnLayout
+import androidx.core.view.forEach
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import uk.akane.accord.logic.forEachChild
 import uk.akane.accord.ui.components.FadingVerticalEdgeLayout
 import kotlin.math.roundToInt
 
@@ -89,7 +89,7 @@ class LyricsViewModel(private val context: Context) {
                 scrollView.scrollTo(0, targetOffset.roundToInt())
 
                 val scrollOffset = scrollView.scrollY.toFloat()
-                lyricsView.forEachChild { child ->
+                lyricsView.forEach { child: View ->
                     child as LyricsLineView
                     val targetTransitionY = child.textOffset + deltaOffset
                     if (child.animations.checkIsInScreen(scrollOffset, targetTransitionY)) {
@@ -106,7 +106,7 @@ class LyricsViewModel(private val context: Context) {
                     }
                 }
             } else {
-                lyricsView.forEachChild { child ->
+                lyricsView.forEach { child: View ->
                     child as LyricsLineView
                     child.textOffset = 0f
                     child.animations.update(index, true)
@@ -127,7 +127,7 @@ class LyricsViewModel(private val context: Context) {
                 scrollView.isVerticalScrollBarEnabled = false
                 scrollView.scrollTo(0, targetOffset.roundToInt())
 
-                lyricsView.forEachChild { child ->
+                lyricsView.forEach { child: View ->
                     child as LyricsLineView
                     child.animations.updateImmediately(index)
                     child.visibility = View.VISIBLE

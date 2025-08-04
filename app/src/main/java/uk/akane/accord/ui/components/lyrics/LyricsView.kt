@@ -2,10 +2,11 @@ package uk.akane.accord.ui.components.lyrics
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.forEach
 import uk.akane.accord.logic.dp
 import androidx.core.view.isNotEmpty
-import uk.akane.accord.logic.forEachChild
 import kotlin.math.roundToInt
 
 class LyricsView @JvmOverloads constructor(
@@ -14,7 +15,7 @@ class LyricsView @JvmOverloads constructor(
     val contentPaddingTop = 160.dp.px.roundToInt()
 
     fun update(lyrics: Lyrics) {
-        forEachChild { child ->
+        forEach { child: View ->
             child as LyricsLineView
             child.release()
         }
@@ -33,7 +34,7 @@ class LyricsView @JvmOverloads constructor(
         setMeasuredDimension(width, height)
 
         var layoutHeight = contentPaddingTop
-        forEachChild { child ->
+        forEach { child: View ->
             child.measure(widthMeasureSpec, heightMeasureSpec)
             child as LyricsLineView
             child.animations.setGlobalOffset(layoutHeight.toFloat())
@@ -49,7 +50,7 @@ class LyricsView @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         var top = contentPaddingTop
-        forEachChild { child ->
+        forEach { child: View ->
             val height = child.measuredHeight
             child.layout(0, top, child.measuredWidth, top + height)
             top += height

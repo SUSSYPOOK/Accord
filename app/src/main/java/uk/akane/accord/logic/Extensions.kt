@@ -12,7 +12,6 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -21,6 +20,7 @@ import androidx.annotation.FloatRange
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
+import androidx.core.net.toUri
 import androidx.core.text.TextUtilsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -30,13 +30,12 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import uk.akane.accord.R
-import uk.akane.cupertino.widget.utils.AnimationUtils
 import uk.akane.accord.logic.utils.CalculationUtils.lerp
 import uk.akane.accord.logic.utils.UiUtils
+import uk.akane.cupertino.widget.utils.AnimationUtils
 import java.util.Locale
 import kotlin.math.absoluteValue
 import kotlin.math.max
-import androidx.core.net.toUri
 
 fun View.enableEdgeToEdgePaddingListener(
     ime: Boolean = false, top: Boolean = false,
@@ -215,12 +214,6 @@ fun floatAnimator(
 )
 
 private val FloatLerp = { from: Float, to: Float, fraction: Float -> lerp(from, to, fraction) }
-
-inline fun ViewGroup.forEachChild(block: (child: View) -> Unit) {
-    for (i in 0..<childCount) {
-        block(getChildAt(i))
-    }
-}
 
 fun Rect.scale(
     @FloatRange(from = -1.0, to = 1.0) scaleX: Float,
