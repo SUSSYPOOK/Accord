@@ -19,7 +19,7 @@ import uk.akane.accord.logic.getUriToDrawable
 import uk.akane.accord.ui.components.lyrics.Lyrics
 import uk.akane.accord.ui.components.lyrics.LyricsView
 import uk.akane.accord.ui.components.lyrics.LyricsViewModel
-import uk.akane.cupertino.widget.OverlayDivider
+import uk.akane.cupertino.widget.divider.OverlayDivider
 
 class FullPlayer @JvmOverloads constructor(
     context: Context,

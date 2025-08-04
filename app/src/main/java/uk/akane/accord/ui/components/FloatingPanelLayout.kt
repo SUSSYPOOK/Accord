@@ -315,7 +315,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 max(((windowHeight - height) / lastFlingSpeed).toLong(), defaultMinDuration),
                 defaultMaxDuration
             )
-            this.interpolator = defaultInterpolator
+            interpolator = defaultInterpolator
             start()
         }
         return true
@@ -358,7 +358,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 setHeight(value)
             }
             duration = defaultUpActionDuration
-            this.interpolator = defaultInterpolator
+            interpolator = defaultInterpolator
             start()
         }
     }
