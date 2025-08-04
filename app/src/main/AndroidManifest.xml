@@ -21,7 +21,6 @@
         android:theme="@style/Theme.Accord.Splash">
         <activity
             android:name=".ui.MainActivity"
-            android:hardwareAccelerated="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

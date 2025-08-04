@@ -84,7 +84,7 @@ class BlendView @JvmOverloads constructor(
                     resources,
                     R.drawable.fg_blend_curving,
                     BitmapFactory.Options().apply { inSampleSize = 16 })
-            invalidate()
+            postInvalidate()
         }
 
         initializeImageSwitchers()

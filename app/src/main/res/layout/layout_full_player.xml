@@ -124,6 +124,16 @@
         app:layout_constraintBottom_toBottomOf="@id/list"
         />
 
+    <uk.akane.cupertino.widget.StarTransformButton
+        android:id="@+id/star"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="@dimen/full_cover_radius"
+        app:layout_constraintTop_toTopOf="@id/title"
+        app:layout_constraintBottom_toBottomOf="@id/subtitle"
+        app:layout_constraintEnd_toEndOf="@id/cover"
+        />
+
     <include
         layout="@layout/layout_full_player_lyrics"
         />

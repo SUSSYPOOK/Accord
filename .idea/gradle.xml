@@ -13,11 +13,10 @@
             <option value="$PROJECT_DIR$/Cupertino" />
             <option value="$PROJECT_DIR$/Cupertino/Cupertino" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/libphonograph" />
-            <option value="$PROJECT_DIR$/libphonograph/libPhonograph" />
+            <option value="$PROJECT_DIR$/libPhonograph" />
+            <option value="$PROJECT_DIR$/libPhonograph/libPhonograph" />
           </set>
         </option>
-        <option name="resolveExternalAnnotations" value="false" />
       </GradleProjectSettings>
     </option>
   </component>
