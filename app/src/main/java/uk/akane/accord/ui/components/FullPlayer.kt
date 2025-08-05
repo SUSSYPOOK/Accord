@@ -71,9 +71,17 @@ class FullPlayer @JvmOverloads constructor(
         }
 
         volumeOverlaySlider.addEmphasizeListener(object : OverlaySlider.EmphasizeListener {
-            override fun onEmphasizeProgress(translationX: Float) {
+            override fun onEmphasizeProgressLeft(translationX: Float) {
                 speakerHintView.translationX = -translationX
+            }
+
+            override fun onEmphasizeProgressRight(translationX: Float) {
                 speakerFullHintView.translationX = translationX
+            }
+
+            override fun onEmphasizeAll(fraction: Float) {
+                speakerHintView.transformValue = fraction
+                speakerFullHintView.transformValue = fraction
             }
         })
     }

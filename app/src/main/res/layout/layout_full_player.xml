@@ -172,6 +172,7 @@
         android:layout_height="32dp"
         android:layout_marginHorizontal="-2dp"
         android:paddingVertical="4dp"
+        app:overshoot="true"
         app:layout_constraintTop_toTopOf="@id/speaker_hint"
         app:layout_constraintBottom_toBottomOf="@id/speaker_hint"
         app:layout_constraintStart_toEndOf="@id/speaker_hint"

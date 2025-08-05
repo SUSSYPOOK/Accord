@@ -86,6 +86,19 @@ object CalculationUtils {
         return if (a != b) (value - a) / (b - a) else 0.0f
     }
 
+    fun berp(a: Float, b: Float, value: Float): Float =
+        lerp(a, b, easingBezier(value))
+
+    fun easingBezier(t: Float) = cubicBezier(t, 0.2F, 0F, 0F, 1F)
+
+    fun cubicBezier(t: Float, p0: Float, p1: Float, p2: Float, p3: Float): Float {
+        val u = 1 - t
+        return u * u * u * p0 +
+                3 * u * u * t * p1 +
+                3 * u * t * t * p2 +
+                t * t * t * p3
+    }
+
     /** Returns the single argument constrained between [0.0, 1.0].  */
     private fun saturate(value: Float): Float {
         return value.coerceAtLeast(0f).coerceAtMost(1f)
