@@ -224,6 +224,11 @@ class BlendView @JvmOverloads constructor(
         Choreographer.getInstance().removeFrameCallback(this)
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        Choreographer.getInstance().removeFrameCallback(this)
+    }
+
     private var lastFrameTimeNanos = 0L
     private val frameIntervalNanos = 1_000_000_000L / 30  // 30fps
     private var running = false

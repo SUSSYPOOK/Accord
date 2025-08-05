@@ -73,5 +73,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.material)
+    debugImplementation(libs.leakcanary.android)
 
 }

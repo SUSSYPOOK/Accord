@@ -3,6 +3,7 @@ core = "1.16.0"
 coreSplashscreen = "1.2.0-rc01"
 activity = "1.10.1"
 fragment = "1.8.8"
+leakcanaryAndroid = "2.14"
 lifecycle = "2.9.2"
 palette = "1.0.0"
 appcompat = "1.7.1"
@@ -26,6 +27,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-window = { group = "androidx.window", name = "window", version.ref = "window" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 hiddenapibypass = { group = "org.lsposed.hiddenapibypass", name = "hiddenapibypass", version.ref = "hiddenapibypass" }
 
