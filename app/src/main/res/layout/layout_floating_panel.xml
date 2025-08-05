@@ -19,7 +19,9 @@
         android:id="@+id/preview_player"
         android:layout_width="match_parent"
         android:layout_height="@dimen/preview_player_height"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginHorizontal="@dimen/preview_player_horizontal_margin"
+        android:layout_marginBottom="@dimen/bottom_nav_height_raw"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />

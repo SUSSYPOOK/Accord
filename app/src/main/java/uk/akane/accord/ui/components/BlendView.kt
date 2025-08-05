@@ -37,6 +37,7 @@ import java.io.FileNotFoundException
 import java.io.InputStream
 import kotlin.math.ceil
 import kotlin.math.cos
+import androidx.core.graphics.createBitmap
 
 class BlendView @JvmOverloads constructor(
     context: Context,
@@ -62,7 +63,7 @@ class BlendView @JvmOverloads constructor(
 
     companion object {
         const val VIEW_TRANSIT_DURATION: Long = 400
-        const val FULL_BLUR_RADIUS: Float = 100F
+        const val FULL_BLUR_RADIUS: Float = 120F
         const val SHALLOW_BLUR_RADIUS: Float = 60F
         const val CYCLE: Int = 360
         const val SATURATION_FACTOR: Float = 1.7F
@@ -139,7 +140,8 @@ class BlendView @JvmOverloads constructor(
 
             val dstRect = RectF(left, top, left + scaledWidth, top + scaledHeight)
 
-            canvas.drawBitmap(bmp, null, dstRect, overlayPaint)
+            // TODO
+            // canvas.drawBitmap(bmp, null, dstRect, overlayPaint)
         }
     }
 
@@ -230,9 +232,9 @@ class BlendView @JvmOverloads constructor(
         if (!running) return
         if (frameTimeNanos - lastFrameTimeNanos >= frameIntervalNanos) {
             lastFrameTimeNanos = frameTimeNanos
-            imageViewTS.rotation = (imageViewTS.rotation + 1.2f) % CYCLE
-            imageViewBE.rotation = (imageViewBE.rotation + .67f) % CYCLE
-            rotateFrame.rotation = (rotateFrame.rotation - .6f) % CYCLE
+            imageViewTS.rotation = (imageViewTS.rotation + .3f) % CYCLE
+            imageViewBE.rotation = (imageViewBE.rotation + .2f) % CYCLE
+            rotateFrame.rotation = (rotateFrame.rotation - .1f) % CYCLE
             overlayPaint.alpha = 30 + (30 * sineAlphaFloat()).toInt()
             invalidate()
         }
@@ -285,7 +287,7 @@ class BlendView @JvmOverloads constructor(
         val width = bitmap.width
         val height = bitmap.height
 
-        val enhancedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val enhancedBitmap = createBitmap(width, height)
         enhancedBitmap.density = bitmap.density
 
         val enhancePaint = Paint()

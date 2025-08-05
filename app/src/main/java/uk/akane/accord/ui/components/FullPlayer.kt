@@ -72,7 +72,6 @@ class FullPlayer @JvmOverloads constructor(
             WindowInsetsCompat.Type.systemBars()
                     or WindowInsetsCompat.Type.displayCutout()
         )
-        Log.d(TAG, "marginBottom: ${marginBottom}, InsetsBottom: ${floatingInsets.bottom}, marginTop: ${floatingInsets.top}")
         if (floatingInsets.bottom != 0) {
             initialMargin = intArrayOf(
                 marginLeft,
@@ -85,6 +84,7 @@ class FullPlayer @JvmOverloads constructor(
                 topMargin = initialMargin[1] + overlayDivider.marginTop
             }
         }
+        Log.d(TAG, "marginBottom: ${marginBottom}, InsetsBottom: ${floatingInsets.bottom}, marginTop: ${floatingInsets.top}")
         return super.dispatchApplyWindowInsets(platformInsets)
     }
 
@@ -94,18 +94,13 @@ class FullPlayer @JvmOverloads constructor(
         }
     }
 
-    override fun onSlide(value: Float) {
-        // PLACEHOLDER TODO
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        Log.d("TAG", "onMeasured")
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val screenWidth = resources.displayMetrics.widthPixels
-        val screenHeight = resources.displayMetrics.heightPixels
-
-        val widthSpec = MeasureSpec.makeMeasureSpec(screenWidth, MeasureSpec.EXACTLY)
-        val heightSpec = MeasureSpec.makeMeasureSpec(screenHeight, MeasureSpec.EXACTLY)
-
-        super.onMeasure(widthSpec, heightSpec)
+    override fun onSlide(value: Float) {
+        // PLACEHOLDER TODO
     }
 
     companion object {

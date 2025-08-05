@@ -1,8 +1,8 @@
 package uk.akane.accord.ui
 
+import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RoundRectShape
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.RoundedCorner
 import android.view.View
@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
@@ -37,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shrinkContainerLayout: MaterialCardView
     private lateinit var shadeView: View
     private lateinit var screenCorners: UiUtils.ScreenCorners
-
 
     private var bottomInset: Int = 0
     private var bottomDefaultRadius: Int = 0
@@ -78,13 +78,29 @@ class MainActivity : AppCompatActivity() {
         floatingPanelLayout.addOnSlideListener(object : FloatingPanelLayout.OnSlideListener {
             override fun onSlideStatusChanged(status: FloatingPanelLayout.SlideStatus) {
                 when (status) {
+                    FloatingPanelLayout.SlideStatus.EXPANDED -> {
+                        if (!isDarkMode(this@MainActivity) &&
+                            floatingPanelLayout.insetController.isAppearanceLightStatusBars) {
+                            floatingPanelLayout.insetController
+                                .isAppearanceLightStatusBars = false
+                        }
+                    }
                     FloatingPanelLayout.SlideStatus.COLLAPSED -> {
                         shrinkContainerLayout.apply {
                             scaleX = 1f
                             scaleY = 1f
                         }
+                        if (!isDarkMode(this@MainActivity) && ! floatingPanelLayout.insetController.isAppearanceLightStatusBars) {
+                            floatingPanelLayout.insetController
+                                .isAppearanceLightStatusBars = true
+                        }
                     }
-                    else -> {}
+                    FloatingPanelLayout.SlideStatus.SLIDING -> {
+                        if (!isDarkMode(this@MainActivity) && ! floatingPanelLayout.insetController.isAppearanceLightStatusBars) {
+                            floatingPanelLayout.insetController
+                                .isAppearanceLightStatusBars = true
+                        }
+                    }
                 }
             }
 
@@ -101,19 +117,7 @@ class MainActivity : AppCompatActivity() {
                     scaleY = (1f - DESIRED_SHRINK_RATIO) * (1f - value) + DESIRED_SHRINK_RATIO
                 }
                 val cornerProgress = (screenCorners.getAvgRadius() - bottomDefaultRadius) * value + bottomDefaultRadius
-                floatingPanelLayout.background = ShapeDrawable().apply {
-                    paint.color = bottomNavigationPanelColor
-                    shape = RoundRectShape(
-                        floatArrayOf(
-                            cornerProgress, cornerProgress,
-                            cornerProgress, cornerProgress,
-                            cornerProgress, cornerProgress,
-                            cornerProgress, cornerProgress,
-                        ),
-                        null,  // No inner rectangle
-                        null   // No inner radii
-                    )
-                }
+                floatingPanelLayout.panelCornerRadius = cornerProgress
             }
         })
 
@@ -126,6 +130,7 @@ class MainActivity : AppCompatActivity() {
                 (windowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)?.radius ?: 0).toFloat(),
                 (windowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)?.radius ?: 0).toFloat()
             )
+
             shrinkContainerLayout.shapeAppearanceModel =
                 shrinkContainerLayout.shapeAppearanceModel
                     .toBuilder()
@@ -149,4 +154,8 @@ class MainActivity : AppCompatActivity() {
     fun connectBottomNavigationView(listener : OnItemSelectedListener) {
         bottomNavigationView.setOnItemSelectedListener(listener)
     }
+
+    private fun isDarkMode(context: Context): Boolean =
+        context.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }

@@ -49,13 +49,9 @@
     <uk.akane.accord.ui.components.FloatingPanelLayout
         android:id="@+id/floating"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/preview_player_height"
+        android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:layout_marginHorizontal="12dp"
-        android:layout_marginBottom="@dimen/bottom_nav_height_raw"
-        android:background="@drawable/slider_container_background"
         android:elevation="16dp"
-        android:layerType="hardware"
         />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

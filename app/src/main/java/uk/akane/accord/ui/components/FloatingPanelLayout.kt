@@ -2,44 +2,34 @@ package uk.akane.accord.ui.components
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import android.content.res.Configuration
-import android.graphics.Outline
-import android.graphics.Rect
-import android.graphics.drawable.Drawable
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewOutlineProvider
 import android.view.WindowInsets
-import android.view.animation.PathInterpolator
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.toColorInt
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
+import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.window.layout.WindowMetricsCalculator
 import uk.akane.accord.R
-import uk.akane.accord.logic.dp
-import uk.akane.accord.logic.scale
-import uk.akane.accord.ui.MainActivity
-import uk.akane.accord.ui.viewmodels.AccordViewModel
-import java.math.BigDecimal
-import java.math.RoundingMode
+import uk.akane.accord.logic.utils.CalculationUtils.lerp
+import uk.akane.cupertino.widget.continuousRoundRect
+import uk.akane.cupertino.widget.utils.AnimationUtils
 import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.min
-
 
 class FloatingPanelLayout @JvmOverloads constructor(
     context: Context,
@@ -49,137 +39,143 @@ class FloatingPanelLayout @JvmOverloads constructor(
 ) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes),
     GestureDetector.OnGestureListener {
 
-    companion object {
-        const val TAG = "FloatingPanelLayout"
-    }
+    private val activity: Activity
+        get() = context as Activity
 
-    private val activity
-        get() = context as MainActivity
-    private val viewModel: AccordViewModel =
-        ViewModelProvider(context as ViewModelStoreOwner)[AccordViewModel::class.java]
-    private val windowHeight: Int
-        get() = WindowMetricsCalculator.getOrCreate()
-            .computeCurrentWindowMetrics(context).bounds.height()
-    private var valueAnimator: ValueAnimator? = null
+    private val gestureDetector = GestureDetector(context, this)
+    val insetController = WindowCompat.getInsetsController(activity.window, this)
 
-    private var gestureDetector = GestureDetector(context, this)
-
-    private var progress: Float = 0f
-
+    private var fraction: Float = 0F
     private var initialMargin = IntArray(4)
-    private var initialHeight = 0
-    private var instanceHeight = 0
-    private var instanceBottomMargin = 0
 
-    private var scrollHeight = 0
-    private var scrollBottomMargin = 0
+    private var fullScreenView: View
+    private var previewView: View
 
-    private var isScrollingUp = false
+    private var flingValueAnimator: ValueAnimator? = null
+    private var penultimateMotionTime = 0L
+    private var penultimateMotionY = 0F
+    private var lastMotionTime = 0L
+    private var lastMotionY = 0F
 
-    private var retractThreshold = 0.05F
+    private val path = Path()
 
-    private var defaultMaxDuration = 350L
-    private var defaultMinDuration = 220L
-    private var defaultUpActionDuration = 285L
-    private var defaultInterpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
+    private var boundLeft = 0F
+    private var boundTop = 0F
+    private var boundRight = 0F
+    private var boundBottom = 0F
 
-    private var fullPlayer: FullPlayer? = null
-    private var previewPlayer: PreviewPlayer
+    private var fullLeft = 0F
+    private var fullTop = 0F
+    private var fullRight = 0F
+    private var fullBottom = 0F
 
-    private val insetController = WindowCompat.getInsetsController(activity.window, this)
+    private var previewLeft = 0F
+    private var previewTop = 0F
+    private var previewRight = 0F
+    private var previewBottom = 0F
 
-    enum class SlideStatus {
-        COLLAPSED, EXPANDED, SLIDING
-    }
+    private var isDragging = false
+    private var isDraggingUp = true
 
-    interface OnSlideListener {
-        fun onSlideStatusChanged(status: SlideStatus)
+    var panelCornerRadius = 0F
 
-        fun onSlide(value: Float)
-    }
-
-    private var state: SlideStatus
-        get() = viewModel.floatingPanelStatus.value
-        set(value) {
-            viewModel.floatingPanelStatus.value = value
-        }
-
-    private var onSlideListeners: MutableList<OnSlideListener> = mutableListOf()
-
-    inner class OutlineProvider(
-        private val rect: Rect = Rect(),
-        var scaleX: Float,
-        var scaleY: Float,
-        private var yShift: Int
-    ) : ViewOutlineProvider() {
-
-        override fun getOutline(view: View?, outline: Outline?) {
-            view?.background?.copyBounds(rect)
-            rect.scale(scaleX, scaleY)
-            rect.offset(0, yShift)
-
-            val cornerRadius =
-                resources.getDimensionPixelSize(R.dimen.bottom_panel_radius).toFloat()
-
-            outline?.setRoundRect(rect, cornerRadius)
-        }
+    private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = resources.getColor(R.color.bottomNavigationPanelColor, null)
+        style = Paint.Style.FILL
+        setShadowLayer(
+            resources.getDimensionPixelSize(R.dimen.bottom_panel_shadow_radius).toFloat(),
+            0f,
+            0f,
+            0x22000000
+        )
     }
 
     init {
         inflate(context, R.layout.layout_floating_panel, this)
-        fullPlayer = findViewById(R.id.full_player)
-        previewPlayer = findViewById(R.id.preview_player)
-        outlineProvider = OutlineProvider(scaleX = 1.02f, scaleY = 1.00f, yShift = (-2).dp.px.toInt())
-        addOnSlideListener(object : OnSlideListener {
-            override fun onSlideStatusChanged(status: SlideStatus) {
-                when (status) {
-                    SlideStatus.EXPANDED -> {
-                        if (!isDarkMode(context) && insetController.isAppearanceLightStatusBars) {
-                            WindowCompat
-                                .getInsetsController(activity.window, this@FloatingPanelLayout)
-                                .isAppearanceLightStatusBars = false
-                        }
-                        fullPlayer?.alpha = 1F
-                        previewPlayer.alpha = 0F
-                    }
-                    SlideStatus.COLLAPSED -> {
-                        if (!isDarkMode(context) && !insetController.isAppearanceLightStatusBars) {
-                            WindowCompat
-                                .getInsetsController(activity.window, this@FloatingPanelLayout)
-                                .isAppearanceLightStatusBars = true
-                        }
-                        fullPlayer?.alpha = 0F
-                        previewPlayer.alpha = 1F
-                    }
-                    SlideStatus.SLIDING -> {
-                        if (!isDarkMode(context) && !insetController.isAppearanceLightStatusBars) {
-                            WindowCompat
-                                .getInsetsController(activity.window, this@FloatingPanelLayout)
-                                .isAppearanceLightStatusBars = true
-                        }
-                    }
-                }
-            }
 
-            override fun onSlide(value: Float) {
-                fullPlayer?.alpha = value
-                previewPlayer.alpha = 1f - value
-            }
-
-        })
+        fullScreenView = findViewById(R.id.full_player)
+        previewView = findViewById(R.id.preview_player)
 
         doOnLayout {
-            initialHeight = height
+            panelCornerRadius = resources.getDimensionPixelSize(R.dimen.bottom_panel_radius).toFloat()
+            // First init to sync the view location
+            updateTransform()
         }
     }
 
-    fun addOnSlideListener(onSlideListener: OnSlideListener) {
-        onSlideListeners.add(onSlideListener)
+    fun setTransformFraction(fraction: Float) {
+        this.fraction = fraction
+        updateTransform()
     }
 
-    override fun setBackground(background: Drawable?) {
-        super.setBackground(background)
-        fullPlayer?.let { it.background = background }
+    fun updateTransform() {
+        val deltaY = (fullScreenView.height - previewView.height - previewView.marginBottom) * fraction
+        // Preview
+        previewView.scaleX =
+            ((fullScreenView.width - previewView.width) * fraction) / previewView.width + 1f
+        previewView.scaleY = previewView.scaleX
+        previewView.translationY =
+            -deltaY
+
+        // Full
+        fullScreenView.scaleX = (previewView.width * previewView.scaleX) / fullScreenView.width
+        fullScreenView.scaleY = fullScreenView.scaleX
+        fullScreenView.translationY = (fullScreenView.height - previewView.marginBottom - previewView.height - deltaY)
+        fullScreenView.pivotY = 0f
+        fullScreenView.pivotX = fullScreenView.width / 2f
+
+        previewLeft = previewView.marginStart.toFloat()
+        previewTop = (fullScreenView.height - previewView.height - previewView.marginBottom).toFloat()
+        previewRight = fullScreenView.width.toFloat() - previewView.marginEnd
+        previewBottom = fullScreenView.height.toFloat() - previewView.marginBottom
+
+        fullLeft = 0f
+        fullTop = 0f
+        fullRight = fullScreenView.width.toFloat()
+        fullBottom = fullScreenView.height.toFloat()
+
+        boundLeft = lerp(previewLeft, fullLeft, fraction)
+        boundTop = lerp(previewTop, fullTop, fraction)
+        boundRight = lerp(previewRight, fullRight, fraction)
+        boundBottom = lerp(previewBottom, fullBottom, fraction)
+
+        path.reset()
+        path.continuousRoundRect(
+            boundLeft, boundTop, boundRight, boundBottom,
+            panelCornerRadius * (1f - fraction)
+        )
+
+        previewView.alpha = 1f - fraction
+        fullScreenView.alpha = fraction
+
+        postInvalidateOnAnimation()
+        triggerSlide(fraction)
+    }
+
+    private fun isInsideBoundingBox(x: Float, y: Float): Boolean {
+        return x in boundLeft..boundRight && y in boundTop..boundBottom
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        canvas.drawPath(path, shadowPaint)
+        canvas.clipPath(path)
+        super.dispatchDraw(canvas)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return if (isInsideBoundingBox(event.x, event.y) || isDragging) {
+            if (gestureDetector.onTouchEvent(event)) {
+                true
+            } else if (event.action == MotionEvent.ACTION_UP) {
+                onUp()
+                true
+            } else {
+                super.onTouchEvent(event)
+            }
+        } else {
+            false
+        }
     }
 
     override fun dispatchApplyWindowInsets(platformInsets: WindowInsets): WindowInsets {
@@ -191,231 +187,135 @@ class FloatingPanelLayout @JvmOverloads constructor(
         )
         if (floatingInsets.bottom != 0) {
             initialMargin = intArrayOf(
-                marginLeft,
-                marginTop,
-                marginRight,
-                marginBottom + floatingInsets.bottom
+                previewView.marginLeft,
+                previewView.marginTop,
+                previewView.marginRight,
+                previewView.marginBottom + floatingInsets.bottom
             )
-            updateLayoutParams<MarginLayoutParams> {
+            previewView.updateLayoutParams<MarginLayoutParams> {
                 bottomMargin = initialMargin[3]
             }
         }
         return super.dispatchApplyWindowInsets(platformInsets)
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        Log.d("TAG", "State: $state")
-        doOnLayout {
-            onUp(
-                when (state) {
-                    SlideStatus.COLLAPSED -> false
-                    SlideStatus.EXPANDED -> true
-                    else -> null
-                },
-                false
-            )
-            onSlideListeners.forEach {
-                it.onSlideStatusChanged(state)
-                it.onSlide(
-                    when (state) {
-                        SlideStatus.COLLAPSED -> 0f
-                        SlideStatus.EXPANDED -> 1f
-                        else -> 0f
-                    }
-                )
-            }
-        }
-    }
-
-    override fun onDetachedFromWindow() {
-        onSlideListeners.clear()
-        super.onDetachedFromWindow()
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return if (gestureDetector.onTouchEvent(event)) {
-            true
-        } else if (event.action == MotionEvent.ACTION_UP) {
-            onUp()
-            true
-        } else {
-            super.onTouchEvent(event)
-        }
-    }
-
-    override fun onDown(event: MotionEvent): Boolean {
-        valueAnimator?.cancel()
-        instanceHeight = height
-        instanceBottomMargin = marginBottom
-        scrollHeight = height
-        scrollBottomMargin = marginBottom
+    override fun onDown(e: MotionEvent): Boolean {
         return true
-    }
-
-    override fun onShowPress(event: MotionEvent) {
-    }
-
-    override fun onSingleTapUp(event: MotionEvent): Boolean {
-        if (state == SlideStatus.COLLAPSED) {
-            onUp(true)
-        }
-        return true
-    }
-
-    private var lastEventTime = 0L
-    private var lastFlingSpeed = 0F
-
-    override fun onScroll(
-        event1: MotionEvent?,
-        event2: MotionEvent,
-        distanceX: Float,
-        distanceY: Float
-    ): Boolean {
-        val distanceMoved = -(scrollHeight + scrollBottomMargin - height - marginBottom)
-        val timeDelta = (event2.eventTime - lastEventTime).toFloat()
-        val lastVelocity = distanceMoved.absoluteValue / timeDelta
-        if (lastVelocity != 0F) lastFlingSpeed = lastVelocity
-        val distanceMovedTotal = -(instanceHeight + instanceBottomMargin - height - marginBottom)
-        isScrollingUp = distanceMoved >= 0 && distanceMovedTotal >= 0
-        val distanceMotionEvent1ToTop = event1!!.y
-        if (distanceMotionEvent1ToTop > height) return true
-        val distanceMotionEvent2ToTop = -event2.y
-        val compensateHeight = (distanceMotionEvent1ToTop + distanceMotionEvent2ToTop + height).toInt()
-        valueAnimator?.cancel()
-        setHeight(compensateHeight)
-        scrollHeight = height
-        scrollBottomMargin = marginBottom
-        lastEventTime = event2.eventTime
-        return true
-    }
-
-    override fun onLongPress(event: MotionEvent) {
     }
 
     override fun onFling(
-        event1: MotionEvent?,
-        event2: MotionEvent,
+        e1: MotionEvent?,
+        e2: MotionEvent,
         velocityX: Float,
         velocityY: Float
     ): Boolean {
-        Log.d("TAG", "yesOnFling")
-        valueAnimator?.cancel()
-        valueAnimator = ValueAnimator.ofInt(
-            height,
-            if (isScrollingUp) windowHeight else initialHeight
-        )
-        valueAnimator!!.apply {
-            addUpdateListener {
-                val value = it.animatedValue as Int
-                setHeight(value)
+        isDragging = false
+        val isSlidingUp = (penultimateMotionY - lastMotionY) > 0
+        val lastVelocity = -(lastMotionY - penultimateMotionY) / (lastMotionTime - penultimateMotionTime) * SPEED_FACTOR
+        val supposedDuration =
+            ((fullTop - previewTop) / lastVelocity)
+                .toLong()
+                .absoluteValue
+                .coerceIn(MINIMUM_ANIMATION_TIME, MAXIMUM_ANIMATION_TIME)
+
+        Log.d("TAG", "supposedDuration: $supposedDuration")
+
+        if (state == SlideStatus.SLIDING) {
+            flingValueAnimator?.cancel()
+            flingValueAnimator = null
+
+            ValueAnimator.ofFloat(
+                fraction,
+                if (isSlidingUp) 1.0F else 0F
+            ).apply {
+                flingValueAnimator = this
+                interpolator = AnimationUtils.easingInterpolator
+                duration = supposedDuration
+
+                addUpdateListener {
+                    fraction = animatedValue as Float
+                    updateTransform()
+                }
+
+                start()
             }
-            duration = min(
-                max(((windowHeight - height) / lastFlingSpeed).toLong(), defaultMinDuration),
-                defaultMaxDuration
-            )
-            interpolator = defaultInterpolator
-            start()
         }
         return true
     }
 
-    fun onUp(isUp: Boolean? = null, shouldAnimate: Boolean = true) {
-        if (!shouldAnimate) {
-            setHeight(
-                height = if ((isUp == null && height > retractThreshold * windowHeight) ||
-                    isUp == true
-                )
-                    windowHeight
-                else
-                    initialHeight,
-                onRestart = true,
-                getProgress = {
-                    if ((isUp == null && height > retractThreshold * windowHeight) ||
-                        isUp == true
-                    )
-                        1f
-                    else
-                        0f
+    override fun onLongPress(e: MotionEvent) {
+    }
+
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float
+    ): Boolean {
+        isDragging = true
+
+        flingValueAnimator?.cancel()
+        flingValueAnimator = null
+
+        val deltaY = - distanceY / (fullTop - previewTop)
+        if (fraction + deltaY < 0F || fraction + deltaY > 1F) { return true }
+
+        fraction += deltaY
+        updateTransform()
+
+        penultimateMotionY = lastMotionY
+        penultimateMotionTime = lastMotionTime
+        lastMotionY = e2.y
+        lastMotionTime = e2.eventTime
+
+        return true
+    }
+
+    override fun onShowPress(e: MotionEvent) {}
+
+    override fun onSingleTapUp(e: MotionEvent): Boolean {
+        return true
+    }
+
+    private fun onUp() {
+        if (isDragging) {
+            flingValueAnimator?.cancel()
+            flingValueAnimator = null
+
+            ValueAnimator.ofFloat(
+                fraction,
+                if (isDraggingUp) 1.0F else 0F
+            ).apply {
+                flingValueAnimator = this
+                duration = (MAXIMUM_ANIMATION_TIME + MINIMUM_ANIMATION_TIME) / 2
+                interpolator = AnimationUtils.easingInterpolator
+
+                addUpdateListener {
+                    fraction = animatedValue as Float
+                    updateTransform()
                 }
-            )
-            return
-        }
-        valueAnimator?.cancel()
-        valueAnimator = ValueAnimator.ofInt(
-            height,
-            if ((isUp == null && height > retractThreshold * windowHeight) ||
-                isUp == true
-            )
-                windowHeight
-            else
-                initialHeight
-        )
-        valueAnimator!!.apply {
-            addUpdateListener {
-                val value = it.animatedValue as Int
-                setHeight(value)
-            }
-            duration = defaultUpActionDuration
-            interpolator = defaultInterpolator
-            start()
-        }
-    }
 
-    private fun calculateProgressTillTop(compensateHeight: Int) : Float =
-        min(1f, compensateHeight / windowHeight.toFloat() - ((1f - (height - initialHeight) / (windowHeight - initialHeight).toFloat()) * initialHeight / windowHeight.toFloat()))
-
-    private fun getMarginWithProgress(progress: Float): IntArray =
-        intArrayOf(
-            (initialMargin[0] * (1 - progress)).toInt(),
-            (initialMargin[1] * (1 - progress)).toInt(),
-            (initialMargin[2] * (1 - progress)).toInt(),
-            (initialMargin[3] * (1 - progress)).toInt()
-        )
-
-    private fun setHeight(
-        height: Int = 0,
-        onRestart: Boolean = false,
-        getProgress: (height: Int) -> Float = {
-            calculateProgressTillTop(it)
-        }
-    ) {
-        Log.d(TAG, "setHeight: $height, onRestart: $onRestart")
-        progress = getProgress(height)
-        getMarginWithProgress(progress).let {
-            val layoutParams = CoordinatorLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                max(
-                    min(height, windowHeight), initialHeight
-                )
-            )
-            layoutParams.setMargins(it[0], it[1], it[2], it[3])
-            layoutParams.gravity = Gravity.BOTTOM
-            this.layoutParams = layoutParams
-            if (!onRestart) {
-                onSlide(progress)
+                start()
             }
         }
+
+        isDragging = false
     }
 
-    private fun onSlide(progress: Float) {
-        Log.d(TAG, "onSlide: $progress")
+    private fun triggerSlide(progress: Float) {
         onSlideListeners.forEach {
             it.onSlide(progress)
         }
         val prevState = state
-        BigDecimal(progress.toDouble()).setScale(3, RoundingMode.HALF_UP).toDouble().let {
-            state = when (it) {
-                1.0 -> {
-                    SlideStatus.EXPANDED
-                }
-                0.0 -> {
-                    SlideStatus.COLLAPSED
-                }
-                else -> {
-                    SlideStatus.SLIDING
-                }
+        state = when (progress) {
+            1.0F -> {
+                SlideStatus.EXPANDED
+            }
+            0.0F -> {
+                SlideStatus.COLLAPSED
+            }
+            else -> {
+                SlideStatus.SLIDING
             }
         }
         if (prevState != state) {
@@ -423,7 +323,39 @@ class FloatingPanelLayout @JvmOverloads constructor(
         }
     }
 
-    private fun isDarkMode(context: Context): Boolean =
-        context.resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+    enum class SlideStatus {
+        COLLAPSED, EXPANDED, SLIDING
+    }
+
+    interface OnSlideListener {
+        fun onSlideStatusChanged(status: SlideStatus)
+        fun onSlide(value: Float)
+    }
+
+    private var state: SlideStatus = SlideStatus.COLLAPSED
+    /*
+    TODO
+    get() = viewModel.floatingPanelStatus.value
+    set(value) {
+        viewModel.floatingPanelStatus.value = value
+    }
+     */
+
+    fun addOnSlideListener(listener: OnSlideListener) {
+        onSlideListeners.add(listener)
+    }
+
+    override fun onDetachedFromWindow() {
+        onSlideListeners.clear()
+        super.onDetachedFromWindow()
+    }
+
+    private var onSlideListeners: MutableList<OnSlideListener> = mutableListOf()
+
+    companion object {
+        const val MINIMUM_ANIMATION_TIME = 220L
+        const val MAXIMUM_ANIMATION_TIME = 320L
+        const val SPEED_FACTOR = 2F
+    }
+
 }
