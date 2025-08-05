@@ -3,23 +3,22 @@ package uk.akane.accord.ui.components
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
-import android.view.View
 import android.view.WindowInsets
 import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.doOnLayout
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
 import uk.akane.accord.R
+import uk.akane.accord.logic.dp
 import uk.akane.accord.logic.getUriToDrawable
-import uk.akane.accord.ui.components.lyrics.Lyrics
-import uk.akane.accord.ui.components.lyrics.LyricsView
 import uk.akane.accord.ui.components.lyrics.LyricsViewModel
 import uk.akane.cupertino.widget.divider.OverlayDivider
+import uk.akane.cupertino.widget.image.OverlayHintView
+import uk.akane.cupertino.widget.slider.OverlaySlider
 
 class FullPlayer @JvmOverloads constructor(
     context: Context,
@@ -35,9 +34,15 @@ class FullPlayer @JvmOverloads constructor(
     private var overlayDivider: OverlayDivider
     private var fadingEdgeLayout: FadingVerticalEdgeLayout
     private var lyricsBtn: Button
+    private var volumeOverlaySlider: OverlaySlider
+    private var speakerHintView: OverlayHintView
+    private var speakerFullHintView: OverlayHintView
+
     private var lyricsViewModel: LyricsViewModel? = null
     private val floatingPanelLayout: FloatingPanelLayout?
         get() = parent as FloatingPanelLayout?
+
+    private val iconTransitionDistance: Float = 6F.dp.px
 
     init {
         inflate(context, R.layout.layout_full_player, this)
@@ -46,23 +51,31 @@ class FullPlayer @JvmOverloads constructor(
         overlayDivider = findViewById(R.id.divider)
         fadingEdgeLayout = findViewById(R.id.fading)
         lyricsBtn = findViewById(R.id.lyrics)
+        volumeOverlaySlider = findViewById(R.id.volume_slider)
+        speakerHintView = findViewById(R.id.speaker_hint)
+        speakerFullHintView = findViewById(R.id.speaker_full_hint)
 
         blendView.setImageUri(context.getUriToDrawable(R.drawable.eg))
         blendView.startRotationAnimation()
         clipToOutline = true
 
-        doOnLayout {
-            floatingPanelLayout?.addOnSlideListener(this)
+        floatingPanelLayout?.addOnSlideListener(this)
 
-            fadingEdgeLayout.visibility = GONE
-            lyricsViewModel = LyricsViewModel(context)
+        fadingEdgeLayout.visibility = GONE
+        lyricsViewModel = LyricsViewModel(context)
 
-            lyricsBtn.setOnClickListener {
-                fadingEdgeLayout.visibility = VISIBLE
-                lyricsViewModel?.onViewCreated(fadingEdgeLayout)
-                lyricsBtn.visibility = GONE
-            }
+        lyricsBtn.setOnClickListener {
+            fadingEdgeLayout.visibility = VISIBLE
+            lyricsViewModel?.onViewCreated(fadingEdgeLayout)
+            lyricsBtn.visibility = GONE
         }
+
+        volumeOverlaySlider.addEmphasizeListener(object : OverlaySlider.EmphasizeListener {
+            override fun onEmphasizeProgress(translationX: Float) {
+                speakerHintView.translationX = -translationX
+                speakerFullHintView.translationX = translationX
+            }
+        })
     }
 
     override fun dispatchApplyWindowInsets(platformInsets: WindowInsets): WindowInsets {

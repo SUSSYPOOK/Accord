@@ -146,6 +146,38 @@
         app:iconSize="28dp"
         />
 
+    <uk.akane.cupertino.widget.image.OverlayHintView
+        android:id="@+id/speaker_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/list"
+        app:layout_constraintStart_toStartOf="@id/title"
+        android:layout_marginBottom="16dp"
+        app:icon="@drawable/ic_speaker_2dp"
+        />
+
+    <uk.akane.cupertino.widget.image.OverlayHintView
+        android:id="@+id/speaker_full_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/speaker_hint"
+        app:layout_constraintBottom_toBottomOf="@id/speaker_hint"
+        app:layout_constraintEnd_toEndOf="@id/ellipsis"
+        app:icon="@drawable/ic_speaker_full_2dp"
+        />
+
+    <uk.akane.cupertino.widget.slider.OverlaySlider
+        android:id="@+id/volume_slider"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_marginHorizontal="-2dp"
+        android:paddingVertical="4dp"
+        app:layout_constraintTop_toTopOf="@id/speaker_hint"
+        app:layout_constraintBottom_toBottomOf="@id/speaker_hint"
+        app:layout_constraintStart_toEndOf="@id/speaker_hint"
+        app:layout_constraintEnd_toStartOf="@id/speaker_full_hint"
+        />
+
     <include
         layout="@layout/layout_full_player_lyrics"
         />

@@ -7,6 +7,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.GestureDetector
@@ -14,7 +15,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.graphics.toColorInt
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
@@ -25,6 +25,7 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
+import kotlinx.parcelize.Parcelize
 import uk.akane.accord.R
 import uk.akane.accord.logic.utils.CalculationUtils.lerp
 import uk.akane.cupertino.widget.continuousRoundRect
@@ -233,8 +234,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 duration = supposedDuration
 
                 addUpdateListener {
-                    fraction = animatedValue as Float
-                    updateTransform()
+                    setTransformFraction(animatedValue as Float)
                 }
 
                 start()
@@ -291,8 +291,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 interpolator = AnimationUtils.easingInterpolator
 
                 addUpdateListener {
-                    fraction = animatedValue as Float
-                    updateTransform()
+                    setTransformFraction(animatedValue as Float)
                 }
 
                 start()
@@ -351,6 +350,26 @@ class FloatingPanelLayout @JvmOverloads constructor(
     }
 
     private var onSlideListeners: MutableList<OnSlideListener> = mutableListOf()
+
+    override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        return SavedState(superState, fraction)
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state is SavedState) {
+            super.onRestoreInstanceState(state.superState)
+            fraction = state.savedValue
+            doOnLayout {
+                updateTransform()
+            }
+        } else {
+            super.onRestoreInstanceState(state)
+        }
+    }
+
+    @Parcelize
+    private class SavedState(val superStateInternal: Parcelable?, val savedValue: Float) : BaseSavedState(superStateInternal)
 
     companion object {
         const val MINIMUM_ANIMATION_TIME = 220L
