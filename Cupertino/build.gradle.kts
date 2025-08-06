@@ -1,0 +1,52 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id("com.android.library")
+    kotlin("android")
+}
+
+android {
+    namespace = "uk.akane.cupertino"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 31
+        consumerProguardFiles("Cupertino/Cupertino/consumer-rules.pro")
+    }
+
+    sourceSets {
+        getByName("main") {
+            manifest.srcFile("Cupertino/Cupertino/src/main/AndroidManifest.xml")
+            java.setSrcDirs(listOf("Cupertino/Cupertino/src/main/java"))
+            res.setSrcDirs(listOf("Cupertino/Cupertino/src/main/res"))
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "Cupertino/Cupertino/proguard-rules.pro"
+            )
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.hiddenapibypass)
+}

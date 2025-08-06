@@ -59,9 +59,8 @@ android {
 }
 
 dependencies {
-
-    implementation(project(":libPhonograph:libPhonograph"))
-    implementation(project(":Cupertino:Cupertino"))
+    implementation(project(":libPhonograph"))
+    implementation(project(":Cupertino"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.ktx)
@@ -74,5 +73,4 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.material)
     debugImplementation(libs.leakcanary.android)
-
 }
