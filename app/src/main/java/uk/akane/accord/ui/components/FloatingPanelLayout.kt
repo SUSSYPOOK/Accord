@@ -9,7 +9,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -76,19 +75,12 @@ class FloatingPanelLayout @JvmOverloads constructor(
     private var previewBottom = 0F
 
     private var isDragging = false
-    private var isDraggingUp = true
 
     var panelCornerRadius = 0F
 
     private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = resources.getColor(R.color.bottomNavigationPanelColor, null)
         style = Paint.Style.FILL
-        setShadowLayer(
-            resources.getDimensionPixelSize(R.dimen.bottom_panel_shadow_radius).toFloat(),
-            0f,
-            0f,
-            0x22000000
-        )
     }
 
     init {
@@ -100,16 +92,14 @@ class FloatingPanelLayout @JvmOverloads constructor(
         doOnLayout {
             panelCornerRadius = resources.getDimensionPixelSize(R.dimen.bottom_panel_radius).toFloat()
             // First init to sync the view location
-            updateTransform()
+            updateTransform(fraction)
         }
     }
 
-    fun setTransformFraction(fraction: Float) {
-        this.fraction = fraction
-        updateTransform()
-    }
+    private fun updateTransform(newFraction: Float) {
+        if (newFraction == fraction && fraction != 0F && fraction != 1F) return
+        fraction = newFraction
 
-    fun updateTransform() {
         val deltaY = (fullScreenView.height - previewView.height - previewView.marginBottom) * fraction
         // Preview
         previewView.scaleX =
@@ -149,7 +139,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
         previewView.alpha = 1f - fraction
         fullScreenView.alpha = fraction
 
-        postInvalidateOnAnimation()
+        invalidate()
         triggerSlide(fraction)
     }
 
@@ -219,8 +209,6 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 .absoluteValue
                 .coerceIn(MINIMUM_ANIMATION_TIME, MAXIMUM_ANIMATION_TIME)
 
-        Log.d("TAG", "supposedDuration: $supposedDuration")
-
         if (state == SlideStatus.SLIDING) {
             flingValueAnimator?.cancel()
             flingValueAnimator = null
@@ -234,7 +222,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 duration = supposedDuration
 
                 addUpdateListener {
-                    setTransformFraction(animatedValue as Float)
+                    updateTransform(animatedValue as Float)
                 }
 
                 start()
@@ -260,8 +248,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
         val deltaY = - distanceY / (fullTop - previewTop)
         if (fraction + deltaY < 0F || fraction + deltaY > 1F) { return true }
 
-        fraction += deltaY
-        updateTransform()
+        updateTransform(fraction + deltaY)
 
         penultimateMotionY = lastMotionY
         penultimateMotionTime = lastMotionTime
@@ -284,14 +271,14 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
             ValueAnimator.ofFloat(
                 fraction,
-                if (isDraggingUp) 1.0F else 0F
+                if (penultimateMotionY - lastMotionY > 0) 1.0F else 0F
             ).apply {
                 flingValueAnimator = this
                 duration = (MAXIMUM_ANIMATION_TIME + MINIMUM_ANIMATION_TIME) / 2
                 interpolator = AnimationUtils.easingInterpolator
 
                 addUpdateListener {
-                    setTransformFraction(animatedValue as Float)
+                    updateTransform(animatedValue as Float)
                 }
 
                 start()
@@ -332,13 +319,6 @@ class FloatingPanelLayout @JvmOverloads constructor(
     }
 
     private var state: SlideStatus = SlideStatus.COLLAPSED
-    /*
-    TODO
-    get() = viewModel.floatingPanelStatus.value
-    set(value) {
-        viewModel.floatingPanelStatus.value = value
-    }
-     */
 
     fun addOnSlideListener(listener: OnSlideListener) {
         onSlideListeners.add(listener)
@@ -361,13 +341,14 @@ class FloatingPanelLayout @JvmOverloads constructor(
             super.onRestoreInstanceState(state.superState)
             fraction = state.savedValue
             doOnLayout {
-                updateTransform()
+                updateTransform(fraction)
             }
         } else {
             super.onRestoreInstanceState(state)
         }
     }
 
+    @Suppress("CanBeParameter")
     @Parcelize
     private class SavedState(val superStateInternal: Parcelable?, val savedValue: Float) : BaseSavedState(superStateInternal)
 

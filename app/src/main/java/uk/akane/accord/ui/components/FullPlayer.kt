@@ -13,7 +13,6 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
 import uk.akane.accord.R
-import uk.akane.accord.logic.dp
 import uk.akane.accord.logic.getUriToDrawable
 import uk.akane.accord.ui.components.lyrics.LyricsViewModel
 import uk.akane.cupertino.widget.divider.OverlayDivider
@@ -41,8 +40,6 @@ class FullPlayer @JvmOverloads constructor(
     private var lyricsViewModel: LyricsViewModel? = null
     private val floatingPanelLayout: FloatingPanelLayout?
         get() = parent as FloatingPanelLayout?
-
-    private val iconTransitionDistance: Float = 6F.dp.px
 
     init {
         inflate(context, R.layout.layout_full_player, this)
