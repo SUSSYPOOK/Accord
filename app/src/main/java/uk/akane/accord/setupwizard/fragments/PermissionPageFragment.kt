@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
@@ -16,7 +15,6 @@ import uk.akane.accord.logic.hasMediaPermissionSeparation
 import uk.akane.accord.logic.isAlbumPermissionGranted
 import uk.akane.accord.logic.isEssentialPermissionGranted
 import uk.akane.cupertino.widget.utils.AnimationUtils
-import uk.akane.accord.setupwizard.SetupWizardActivity
 
 class PermissionPageFragment : Fragment() {
 
@@ -38,7 +36,10 @@ class PermissionPageFragment : Fragment() {
     private fun handlePermissionSuccessful(successful: Boolean) {
         if (successful) {
             if (requireContext().isEssentialPermissionGranted() && !musicPermissionButton.isChecked) {
-                (requireActivity() as SetupWizardActivity).releaseContinueButton()
+                (parentFragment as SetupWizardFragment).apply {
+                    onPermissionSuccessCallback.invoke()
+                    releaseContinueButton()
+                }
             }
             if (requireContext().hasMediaPermissionSeparation() &&
                 requireContext().isEssentialPermissionGranted() && !musicPermissionButton.isChecked) {
@@ -120,7 +121,7 @@ class PermissionPageFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.fragment_permission_page, container, false)
+        val rootView = inflater.inflate(R.layout.fragment_setup_wizard_permission_page, container, false)
 
         allowString = getString(R.string.allow)
         allowedString = getString(R.string.allowed)

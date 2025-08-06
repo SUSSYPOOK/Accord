@@ -133,7 +133,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
         path.reset()
         path.continuousRoundRect(
             boundLeft, boundTop, boundRight, boundBottom,
-            panelCornerRadius * (1f - fraction)
+            panelCornerRadius
         )
 
         previewView.alpha = 1f - fraction

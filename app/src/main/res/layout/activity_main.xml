@@ -36,14 +36,6 @@
             app:itemIconSize="30dp"
             android:background="@drawable/shape_bottom_nav" />
 
-        <View
-            android:id="@+id/shade"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#000"
-            android:alpha="0"
-            />
-
     </com.google.android.material.card.MaterialCardView>
 
     <uk.akane.accord.ui.components.FloatingPanelLayout
