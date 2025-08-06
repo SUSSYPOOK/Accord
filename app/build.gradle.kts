@@ -59,8 +59,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":libPhonograph"))
-    implementation(project(":Cupertino"))
+    implementation(projects.libPhonograph)
+    implementation(projects.cupertino)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.ktx)
