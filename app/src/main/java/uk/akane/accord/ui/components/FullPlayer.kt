@@ -15,6 +15,7 @@ import androidx.core.view.updateLayoutParams
 import uk.akane.accord.R
 import uk.akane.accord.logic.getUriToDrawable
 import uk.akane.accord.ui.components.lyrics.LyricsViewModel
+import uk.akane.cupertino.widget.OverlayTextView
 import uk.akane.cupertino.widget.divider.OverlayDivider
 import uk.akane.cupertino.widget.image.OverlayHintView
 import uk.akane.cupertino.widget.slider.OverlaySlider
@@ -34,8 +35,11 @@ class FullPlayer @JvmOverloads constructor(
     private var fadingEdgeLayout: FadingVerticalEdgeLayout
     private var lyricsBtn: Button
     private var volumeOverlaySlider: OverlaySlider
+    private var progressOverlaySlider: OverlaySlider
     private var speakerHintView: OverlayHintView
     private var speakerFullHintView: OverlayHintView
+    private var currentTimestampTextView: OverlayTextView
+    private var leftTimestampTextView: OverlayTextView
 
     private var lyricsViewModel: LyricsViewModel? = null
     private val floatingPanelLayout: FloatingPanelLayout?
@@ -49,8 +53,11 @@ class FullPlayer @JvmOverloads constructor(
         fadingEdgeLayout = findViewById(R.id.fading)
         lyricsBtn = findViewById(R.id.lyrics)
         volumeOverlaySlider = findViewById(R.id.volume_slider)
+        progressOverlaySlider = findViewById(R.id.progressBar)
         speakerHintView = findViewById(R.id.speaker_hint)
         speakerFullHintView = findViewById(R.id.speaker_full_hint)
+        currentTimestampTextView = findViewById(R.id.current_timestamp)
+        leftTimestampTextView = findViewById(R.id.left_timeStamp)
 
         blendView.setImageUri(context.getUriToDrawable(R.drawable.eg))
         blendView.startRotationAnimation()
@@ -79,6 +86,15 @@ class FullPlayer @JvmOverloads constructor(
             override fun onEmphasizeAll(fraction: Float) {
                 speakerHintView.transformValue = fraction
                 speakerFullHintView.transformValue = fraction
+            }
+        })
+
+        progressOverlaySlider.addEmphasizeListener(object : OverlaySlider.EmphasizeListener {
+            override fun onEmphasizeVertical(translationX: Float, translationY: Float) {
+                currentTimestampTextView.translationY = translationY
+                currentTimestampTextView.translationX = - translationX
+                leftTimestampTextView.translationY = translationY
+                leftTimestampTextView.translationX = translationX
             }
         })
     }

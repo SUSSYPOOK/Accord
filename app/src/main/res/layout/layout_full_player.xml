@@ -75,8 +75,7 @@
     <uk.akane.cupertino.widget.slider.OverlaySlider
         android:id="@+id/progressBar"
         android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:paddingVertical="4dp"
+        android:layout_height="28dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="20dp"
         app:momentum="false"
@@ -171,13 +170,41 @@
         android:id="@+id/volume_slider"
         android:layout_width="0dp"
         android:layout_height="32dp"
-        android:layout_marginHorizontal="-2dp"
         android:paddingVertical="4dp"
         app:overshoot="true"
         app:layout_constraintTop_toTopOf="@id/speaker_hint"
         app:layout_constraintBottom_toBottomOf="@id/speaker_hint"
         app:layout_constraintStart_toEndOf="@id/speaker_hint"
         app:layout_constraintEnd_toStartOf="@id/speaker_full_hint"
+        />
+
+    <uk.akane.cupertino.widget.OverlayTextView
+        android:id="@+id/current_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0:00"
+        android:fontFamily="@font/inter_semibold"
+        android:textSize="12sp"
+        android:layout_marginVertical="-16dp"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.03"
+        app:textViewLayer="secondary"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintStart_toStartOf="@id/title"
+        />
+
+    <uk.akane.cupertino.widget.OverlayTextView
+        android:id="@+id/left_timeStamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="-4:32"
+        android:fontFamily="@font/inter_semibold"
+        android:textSize="12sp"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.03"
+        app:textViewLayer="secondary"
+        app:layout_constraintTop_toTopOf="@id/current_timestamp"
+        app:layout_constraintEnd_toEndOf="@id/ellipsis"
         />
 
     <include
