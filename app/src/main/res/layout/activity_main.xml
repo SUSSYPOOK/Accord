@@ -16,7 +16,8 @@
         android:layout_gravity="bottom"
         style="?materialCardViewFilledStyle"
         app:cardBackgroundColor="@color/surfaceColor"
-        app:cardCornerRadius="@dimen/shrink_container_default_radius">
+        app:cardCornerRadius="@dimen/shrink_container_default_radius"
+        app:cardElevation="0dp">
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/container"
@@ -43,7 +44,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:elevation="16dp"
         />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
