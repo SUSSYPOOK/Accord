@@ -120,7 +120,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 shrinkContainer(value, DESIRED_BOTTOM_SHEET_OPEN_RATIO)
                 val cornerProgress = (screenCorners.getAvgRadius() - bottomDefaultRadius) * value + bottomDefaultRadius
-                Log.d("TAG", "screenCorners: ${screenCorners.getAvgRadius()}, cp: $cornerProgress")
                 floatingPanelLayout.panelCornerRadius = cornerProgress
             }
         })

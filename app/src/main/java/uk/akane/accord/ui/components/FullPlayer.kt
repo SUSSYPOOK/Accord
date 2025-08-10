@@ -5,8 +5,11 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.WindowInsets
 import android.widget.Button
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
@@ -16,6 +19,9 @@ import uk.akane.accord.R
 import uk.akane.accord.logic.getUriToDrawable
 import uk.akane.accord.ui.components.lyrics.LyricsViewModel
 import uk.akane.cupertino.widget.OverlayTextView
+import uk.akane.cupertino.widget.button.OverlayBackgroundButton
+import uk.akane.cupertino.widget.button.OverlayButton
+import uk.akane.cupertino.widget.button.StarTransformButton
 import uk.akane.cupertino.widget.divider.OverlayDivider
 import uk.akane.cupertino.widget.image.OverlayHintView
 import uk.akane.cupertino.widget.image.SimpleImageView
@@ -43,10 +49,19 @@ class FullPlayer @JvmOverloads constructor(
     private var currentTimestampTextView: OverlayTextView
     private var leftTimestampTextView: OverlayTextView
     private var coverSimpleImageView: SimpleImageView
+    private var titleTextView: OverlayTextView
+    private var subtitleTextView: OverlayTextView
+    private var listOverlayButton: OverlayButton
+    private var airplayOverlayButton: OverlayButton
+    private var captionOverlayButton: OverlayButton
+    private var starTransformButton: StarTransformButton
+    private var ellipsisButton: OverlayBackgroundButton
+
+
 
     private var lyricsViewModel: LyricsViewModel? = null
-    private val floatingPanelLayout: FloatingPanelLayout?
-        get() = parent as FloatingPanelLayout?
+    private val floatingPanelLayout: FloatingPanelLayout
+        get() = parent as FloatingPanelLayout
 
     init {
         inflate(context, R.layout.layout_full_player, this)
@@ -62,12 +77,17 @@ class FullPlayer @JvmOverloads constructor(
         currentTimestampTextView = findViewById(R.id.current_timestamp)
         leftTimestampTextView = findViewById(R.id.left_timeStamp)
         coverSimpleImageView = findViewById(R.id.cover)
+        titleTextView = findViewById(R.id.title)
+        subtitleTextView = findViewById(R.id.subtitle)
+        listOverlayButton = findViewById(R.id.list)
+        airplayOverlayButton = findViewById(R.id.airplay)
+        captionOverlayButton = findViewById(R.id.caption)
+        starTransformButton = findViewById(R.id.star)
+        ellipsisButton = findViewById(R.id.ellipsis)
 
         blendView.setImageUri(context.getUriToDrawable(R.drawable.eg))
         blendView.startRotationAnimation()
         clipToOutline = true
-
-        floatingPanelLayout?.addOnSlideListener(this)
 
         fadingEdgeLayout.visibility = GONE
         lyricsViewModel = LyricsViewModel(context)
@@ -101,6 +121,21 @@ class FullPlayer @JvmOverloads constructor(
                 leftTimestampTextView.translationX = translationX
             }
         })
+
+        coverSimpleImageView.doOnLayout {
+            Log.d("TAG", "csi: ${coverSimpleImageView.left}, ${coverSimpleImageView.top}")
+            floatingPanelLayout.setupTransitionImageView(
+                coverSimpleImageView.width,
+                coverSimpleImageView.height,
+                coverSimpleImageView.left,
+                coverSimpleImageView.top,
+                AppCompatResources.getDrawable(context, R.drawable.eg)!!.toBitmap()
+            )
+        }
+
+        doOnLayout {
+            floatingPanelLayout.addOnSlideListener(this)
+        }
     }
 
     override fun dispatchApplyWindowInsets(platformInsets: WindowInsets): WindowInsets {
@@ -128,7 +163,12 @@ class FullPlayer @JvmOverloads constructor(
 
     override fun onSlideStatusChanged(status: FloatingPanelLayout.SlideStatus) {
         when (status) {
-            else -> {}
+            FloatingPanelLayout.SlideStatus.EXPANDED -> {
+                coverSimpleImageView.alpha = 1F
+            }
+            else -> {
+                coverSimpleImageView.alpha = 0F
+            }
         }
     }
 

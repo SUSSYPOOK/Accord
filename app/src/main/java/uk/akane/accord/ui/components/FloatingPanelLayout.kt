@@ -4,16 +4,19 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
@@ -28,6 +31,8 @@ import kotlinx.parcelize.Parcelize
 import uk.akane.accord.R
 import uk.akane.accord.logic.utils.CalculationUtils.lerp
 import uk.akane.cupertino.widget.continuousRoundRect
+import uk.akane.cupertino.widget.dpToPx
+import uk.akane.cupertino.widget.image.SimpleImageView
 import uk.akane.cupertino.widget.utils.AnimationUtils
 import kotlin.math.absoluteValue
 
@@ -48,7 +53,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
     private var fraction: Float = 0F
     private var initialMargin = IntArray(4)
 
-    private var fullScreenView: View
+    private var fullScreenView: FullPlayer
     private var previewView: View
 
     private var flingValueAnimator: ValueAnimator? = null
@@ -76,6 +81,8 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
     private var isDragging = false
 
+    private var transitionImageView: SimpleImageView? = null
+
     var panelCornerRadius = 0F
 
     private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -96,6 +103,67 @@ class FloatingPanelLayout @JvmOverloads constructor(
         }
     }
 
+    private var previewCoverBoxMetrics: Int = 0
+    private var previewCoverMargin: Int = 8.dpToPx(context)
+    private var previewCoverHorizontalMargin: Int = 12.dpToPx(context)
+
+    private var fullCoverX: Int = 0
+    private var fullCoverY: Int = 0
+
+    fun setupMetrics(metrics: Int) {
+        previewCoverBoxMetrics = metrics
+    }
+
+    fun setupTransitionImageView(w: Int, h: Int, mx: Int, mh: Int, bitmap: Bitmap) {
+        if (transitionImageView != null) return
+
+        fullCoverX = mx
+        fullCoverY = mh
+
+        transitionImageView = SimpleImageView(context).apply {
+            id = generateViewId()
+            layoutParams = LayoutParams(w, h)
+            setImageBitmap(bitmap)
+            updateCornerRadius(10.dpToPx(context))
+        }
+
+        addView(transitionImageView)
+
+        transitionImageView?.let { it ->
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(this)
+            constraintSet.connect(it.id, ConstraintSet.START, previewView.id, ConstraintSet.START, 0)
+            constraintSet.connect(it.id, ConstraintSet.TOP, previewView.id, ConstraintSet.TOP, 0)
+            constraintSet.applyTo(this)
+
+            it.pivotX = 0F
+            it.pivotY = 0F
+
+            it.doOnLayout {
+                updateTransitionFraction(fraction, 0F)
+                it.elevation = 24F.dpToPx(context)
+            }
+        }
+    }
+
+    private fun updateTransitionFraction(fraction: Float, deltaY: Float) {
+        transitionImageView?.let {
+            if (it.width != 0) {
+                val rawDelta = fullScreenView.height - previewView.height - previewView.marginBottom
+                val initialScale = previewCoverBoxMetrics / it.width.toFloat() * previewView.scaleX
+                val initialTranslationX = + previewCoverMargin.toFloat() * previewView.scaleX - previewCoverHorizontalMargin * fraction
+                val initialTranslationY = deltaY + previewCoverMargin
+
+                it.scaleX = lerp(initialScale, 1f, fraction)
+                it.scaleY = lerp(initialScale, 1f, fraction)
+                it.translationX = lerp(initialTranslationX, fullCoverX - previewCoverHorizontalMargin.toFloat(), fraction)
+                it.translationY = lerp(initialTranslationY, -rawDelta + fullCoverY.toFloat(), fraction)
+
+                Log.d("TAG", "tsx: ")
+            }
+        }
+    }
+
     private fun updateTransform(newFraction: Float) {
         if (newFraction == fraction && fraction != 0F && fraction != 1F) return
         fraction = newFraction
@@ -107,6 +175,8 @@ class FloatingPanelLayout @JvmOverloads constructor(
         previewView.scaleY = previewView.scaleX
         previewView.translationY =
             -deltaY
+
+        updateTransitionFraction(fraction, -deltaY)
 
         // Full
         fullScreenView.scaleX = (previewView.width * previewView.scaleX) / fullScreenView.width
@@ -295,12 +365,15 @@ class FloatingPanelLayout @JvmOverloads constructor(
         val prevState = state
         state = when (progress) {
             1.0F -> {
+                transitionImageView?.visibility = INVISIBLE
                 SlideStatus.EXPANDED
             }
             0.0F -> {
+                transitionImageView?.visibility = INVISIBLE
                 SlideStatus.COLLAPSED
             }
             else -> {
+                transitionImageView?.visibility = VISIBLE
                 SlideStatus.SLIDING
             }
         }
@@ -326,6 +399,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         onSlideListeners.clear()
+        transitionImageView = null
         super.onDetachedFromWindow()
     }
 
