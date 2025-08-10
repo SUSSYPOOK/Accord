@@ -163,7 +163,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 it.scaleX = lerp(initialScale, 1f, fraction)
                 it.scaleY = lerp(initialScale, 1f, fraction)
                 it.translationX = lerp(initialTranslationX, fullCoverX - previewCoverHorizontalMargin.toFloat(), fraction)
-                it.translationY = lerp(initialTranslationY, -rawDelta + fullCoverY.toFloat(), fraction)
+                it.translationY = lerp(previewCoverMargin.toFloat(), -rawDelta.toFloat() + fullCoverY, fraction)
 
                 Log.d("TAG", "tsx: ")
                 it.setPadding(lerp(startPadding, 0F, fraction).toInt())
