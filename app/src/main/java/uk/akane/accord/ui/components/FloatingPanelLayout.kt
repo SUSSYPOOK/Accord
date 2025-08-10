@@ -26,9 +26,11 @@ import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginStart
 import androidx.core.view.marginTop
+import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import kotlinx.parcelize.Parcelize
 import uk.akane.accord.R
+import uk.akane.accord.logic.dp
 import uk.akane.accord.logic.utils.CalculationUtils.lerp
 import uk.akane.cupertino.widget.continuousRoundRect
 import uk.akane.cupertino.widget.dpToPx
@@ -124,7 +126,7 @@ class FloatingPanelLayout @JvmOverloads constructor(
             id = generateViewId()
             layoutParams = LayoutParams(w, h)
             setImageBitmap(bitmap)
-            updateCornerRadius(10.dpToPx(context))
+            updateCornerRadius(startRadius.toInt())
         }
 
         addView(transitionImageView)
@@ -141,10 +143,14 @@ class FloatingPanelLayout @JvmOverloads constructor(
 
             it.doOnLayout {
                 updateTransitionFraction(fraction, 0F)
-                it.elevation = 24F.dpToPx(context)
             }
         }
     }
+
+    private val startPadding = 5F.dp.px
+    private val endElevation = 24F.dp.px
+    private val startRadius = 36F.dp.px
+    private val endRadius = 10F.dp.px
 
     private fun updateTransitionFraction(fraction: Float, deltaY: Float) {
         transitionImageView?.let {
@@ -160,6 +166,9 @@ class FloatingPanelLayout @JvmOverloads constructor(
                 it.translationY = lerp(initialTranslationY, -rawDelta + fullCoverY.toFloat(), fraction)
 
                 Log.d("TAG", "tsx: ")
+                it.setPadding(lerp(startPadding, 0F, fraction).toInt())
+                it.elevation = lerp(0F, endElevation, fraction)
+                it.updateCornerRadius(lerp(startRadius, endRadius, fraction).toInt())
             }
         }
     }

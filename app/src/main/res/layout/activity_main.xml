@@ -19,12 +19,10 @@
         app:cardCornerRadius="@dimen/shrink_container_default_radius"
         app:cardElevation="0dp">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/container"
+        <uk.akane.cupertino.widget.navigation.FragmentSwitcherView
+            android:id="@+id/switcher"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/surfaceColor"
-            android:name="uk.akane.accord.ui.fragments.ViewPagerContainerFragment"
             />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView

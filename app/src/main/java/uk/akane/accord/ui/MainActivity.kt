@@ -29,7 +29,12 @@ import uk.akane.accord.logic.utils.MediaUtils
 import uk.akane.accord.logic.utils.UiUtils
 import uk.akane.accord.setupwizard.fragments.SetupWizardFragment
 import uk.akane.accord.ui.components.FloatingPanelLayout
+import uk.akane.accord.ui.fragments.BrowseFragment
+import uk.akane.accord.ui.fragments.HomeFragment
+import uk.akane.accord.ui.fragments.LibraryFragment
+import uk.akane.accord.ui.fragments.SearchFragment
 import uk.akane.accord.ui.viewmodels.AccordViewModel
+import uk.akane.cupertino.widget.navigation.FragmentSwitcherView
 import uk.akane.cupertino.widget.utils.AnimationUtils
 
 class MainActivity : AppCompatActivity() {
@@ -44,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var floatingPanelLayout: FloatingPanelLayout
     private lateinit var shrinkContainerLayout: MaterialCardView
+    private lateinit var fragmentSwitcherView: FragmentSwitcherView
     private lateinit var screenCorners: UiUtils.ScreenCorners
 
     private var bottomInset: Int = 0
@@ -81,6 +87,36 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView = findViewById(R.id.bottom_nav)
         floatingPanelLayout = findViewById(R.id.floating)
         shrinkContainerLayout = findViewById(R.id.shrink_container)
+        fragmentSwitcherView = findViewById(R.id.switcher)
+
+        fragmentSwitcherView.setup(
+            this,
+            listOf(
+                HomeFragment(),
+                BrowseFragment(),
+                LibraryFragment(),
+                SearchFragment()
+            ),
+            listOf(
+                "Home",
+                "Browse",
+                "Library",
+                "Search"
+            )
+        )
+
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            fragmentSwitcherView.switchBaseFragment(
+                when (item.itemId) {
+                    R.id.home -> 0
+                    R.id.browse -> 1
+                    R.id.library -> 2
+                    R.id.search -> 3
+                    else -> throw IllegalArgumentException("Invalid itemId!")
+                }
+            )
+            true
+        }
 
         floatingPanelLayout.addOnSlideListener(object : FloatingPanelLayout.OnSlideListener {
             override fun onSlideStatusChanged(status: FloatingPanelLayout.SlideStatus) {
@@ -152,10 +188,6 @@ class MainActivity : AppCompatActivity() {
             WindowInsetsCompat.CONSUMED
         }
 
-    }
-
-    fun connectBottomNavigationView(listener : OnItemSelectedListener) {
-        bottomNavigationView.setOnItemSelectedListener(listener)
     }
 
     private fun isDarkMode(context: Context): Boolean =
